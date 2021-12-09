@@ -21,13 +21,9 @@ public class BookRepository<T> implements ProjectRepository<Book> {
 
     @Override
     public boolean store(Book book) {
-        if(!book.getAuthor().isEmpty()&&!book.getTitle().isEmpty()&&!book.getSize().isEmpty()) {
-            book.setId(book.hashCode());
-            logger.info("store new book: " + book);
-            return repo.add(book);
-        }
-        logger.info("failed to store new book due to empty fields");
-        return false;
+        book.setId(book.hashCode());
+        logger.info("store new book: " + book);
+        return repo.add(book);
     }
 
     @Override
