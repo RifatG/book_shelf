@@ -2,12 +2,12 @@ package org.example.web.dto;
 
 public class Book {
 
-    private Integer id;
+    private String id;
     private String author;
     private String title;
     private String size;
 
-    public Book(Integer id, String author, String title, String size) {
+    public Book(String id, String author, String title, String size) {
         this.id = id;
         this.author = author;
         this.title = title;
@@ -21,11 +21,11 @@ public class Book {
         return author;
     }
 
-    public Integer getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 

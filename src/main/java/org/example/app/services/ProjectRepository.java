@@ -9,7 +9,7 @@ public interface ProjectRepository<T> {
 
     boolean store(T book);
 
-    boolean removeItemById(Integer bookIdToRemove);
+    boolean removeItemById(String bookIdToRemove);
 
     boolean removeItemByRegex(String regexToRemove);
 }
