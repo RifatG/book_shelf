@@ -18,19 +18,18 @@ public class BookService {
         this.bookRepo = bookRepo;
     }
 
-    public boolean saveBook(Book book) {
-        if(!book.getAuthor().isEmpty()&&!book.getTitle().isEmpty()&&!book.getSize().isEmpty()) {
-            return bookRepo.store(book);
+    public void saveBook(Book book) {
+        if(!book.getAuthor().isEmpty()&&!book.getTitle().isEmpty()&&book.getSize()!=null) {
+            bookRepo.store(book);
         }
         logger.info("failed to store new book due to empty fields");
-        return false;
     }
 
     public List<Book> getAllBooks() {
         return bookRepo.retrieveAll();
     }
 
-    public boolean removeBookById(String bookIdToRemove) {
+    public boolean removeBookById(Integer bookIdToRemove) {
         return bookRepo.removeItemById(bookIdToRemove);
     }
 
