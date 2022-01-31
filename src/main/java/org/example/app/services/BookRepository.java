@@ -2,45 +2,62 @@ package org.example.app.services;
 
 import org.apache.log4j.Logger;
 import org.example.web.dto.Book;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 @Repository
-public class BookRepository<T> implements ProjectRepository<Book> {
+public class BookRepository<T> implements ProjectRepository<Book>, ApplicationContextAware {
 
     private final Logger logger = Logger.getLogger(BookRepository.class);
-    private final List<Book> repo = new ArrayList<>();
+    private ApplicationContext context;
 
-    @Override
-    public List<Book> retrieveAll() {
-        return new ArrayList<>(repo);
+    private final NamedParameterJdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public BookRepository(NamedParameterJdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public boolean store(Book book) {
-        if(!book.getAuthor().isEmpty()&&!book.getTitle().isEmpty()&&!book.getSize().isEmpty()) {
-            book.setId(book.hashCode());
-            logger.info("store new book: " + book);
-            return repo.add(book);
-        }
-        logger.info("failed to store new book due to empty fields");
-        return false;
+    public List<Book> retrieveAll() {
+        List<Book> books = jdbcTemplate.query("SELECT * FROM books", (ResultSet rs, int rowNum) -> {
+            Book book = new Book();
+            book.setId(rs.getInt("id"));
+            book.setAuthor(rs.getString("author"));
+            book.setTitle(rs.getString("title"));
+            book.setSize(rs.getInt("size"));
+            return book;
+        });
+        return new ArrayList<>(books);
+    }
+
+    @Override
+    public void store(Book book) {
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+        parameterSource.addValue("author", book.getAuthor());
+        parameterSource.addValue("title", book.getTitle());
+        parameterSource.addValue("size", book.getSize());
+        jdbcTemplate.update("INSERT INTO books(author, title, size) VALUES (:author, :title, :size);", parameterSource);
+        logger.info("store new book: " + book);
     }
 
     @Override
     public boolean removeItemById(Integer bookIdToRemove) {
-        for (Book book :
-                retrieveAll()) {
-            if (book.getId().equals(bookIdToRemove)) {
-                logger.info("remove book completed: " + book);
-                return repo.remove(book);
-            }
-        }
-        logger.info("remove book failed. There is no such id");
-        return false;
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+        parameterSource.addValue("id", bookIdToRemove);
+        jdbcTemplate.update("DELETE FROM books WHERE id = :id;", parameterSource);
+        logger.info("remove book completed");
+        return true;
     }
 
     @Override
@@ -49,8 +66,8 @@ public class BookRepository<T> implements ProjectRepository<Book> {
         Pattern pattern = Pattern.compile(regexToRemove);
         for (Book book :
                 retrieveAll()) {
-            if(pattern.matcher(book.getAuthor()).matches()||pattern.matcher(book.getTitle()).matches()||pattern.matcher(book.getSize()).matches()) {
-                repo.remove(book);
+            if(pattern.matcher(book.getAuthor()).matches()||pattern.matcher(book.getTitle()).matches()||pattern.matcher(book.getSize().toString()).matches()) {
+                removeItemById(book.getId());
                 logger.info("remove book completed: " + book);
                 result = true;
             }
@@ -59,4 +76,8 @@ public class BookRepository<T> implements ProjectRepository<Book> {
         return result;
     }
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.context = applicationContext;
+    }
 }

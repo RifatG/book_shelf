@@ -1,5 +1,6 @@
 package org.example.app.services;
 
+import org.apache.log4j.Logger;
 import org.example.web.dto.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,14 +11,18 @@ import java.util.List;
 public class BookService {
 
     private final ProjectRepository<Book> bookRepo;
+    private final Logger logger = Logger.getLogger(BookService.class);
 
     @Autowired
     public BookService(BookRepository<Book> bookRepo) {
         this.bookRepo = bookRepo;
     }
 
-    public boolean saveBook(Book book) {
-        return bookRepo.store(book);
+    public void saveBook(Book book) {
+        if(!book.getAuthor().isEmpty()&&!book.getTitle().isEmpty()&&book.getSize()!=null) {
+            bookRepo.store(book);
+        }
+        logger.info("failed to store new book due to empty fields");
     }
 
     public List<Book> getAllBooks() {
