@@ -67,6 +67,7 @@ public class BookRepository<T> implements ProjectRepository<Book>, ApplicationCo
         for (Book book :
                 retrieveAll()) {
             if(pattern.matcher(book.getAuthor()).matches()||pattern.matcher(book.getTitle()).matches()||pattern.matcher(book.getSize().toString()).matches()) {
+                removeItemById(book.getId());
                 logger.info("remove book completed: " + book);
                 result = true;
             }
